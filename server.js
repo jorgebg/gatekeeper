@@ -52,12 +52,27 @@ function authenticate(code, cb) {
 
 // Convenience for allowing CORS on routes - GET only
 app.all('*', function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*'); 
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS'); 
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
+
+app.get('/authenticate/', function(req, res) {
+  console.log('authenticating code:' + req.query.code);
+  authenticate(req.query.code, function(err, token) {
+    var result = err || !token ? {"error": "bad_code"} : { "token": token };
+    console.log(result)
+    if(req.query.redirect_uri) {
+      var redirect_uri = req.query.redirect_uri + '?' + qs.stringify(result);
+      console.log('Redirect: ' + redirect_uri);
+      res.redirect(redirect_uri);
+    } else {
+      res.json(result);
+    }
+  });
+});
 
 app.get('/authenticate/:code', function(req, res) {
   console.log('authenticating code:' + req.params.code);
